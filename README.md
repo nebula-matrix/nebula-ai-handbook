@@ -12,6 +12,10 @@
 
 - [星云智联配置VM基础说明](docs/vm-configuration/星云智联配置VM基础说明.md) - 详细的虚拟机创建、配置和SSH连接指南
 
+### AI开发环境配置
+
+- [Claude Code开发环境配置指南](docs/ai-deployment/Claude-Code开发环境配置指南.md) - 完整的Claude Code安装、配置和使用指南
+
 ## 🔧 快速导航
 
 ### 新手入门
