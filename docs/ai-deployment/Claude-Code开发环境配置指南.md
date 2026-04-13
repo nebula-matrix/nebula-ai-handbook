@@ -23,7 +23,6 @@
 6. [测试验证](#测试验证)
    - [基本连接测试](#基本连接测试)
    - [功能测试](#功能测试)
-   - [常见问题排查](#常见问题排查)
 7. [补充说明](#补充说明)
 8. [相关资源](#相关资源)
 
@@ -73,24 +72,32 @@ cat /etc/os-release
 
 ```bash
 # 备份原配置文件
-sudo cp /etc/apt/sources.list.d/ubuntu.sources /etc/apt/sources.list.d/ubuntu.sources.backup
+sudo mkdir /etc/apt/backup_config
+sudo mv /etc/apt/sources.list /etc/apt/backup_config/ 2>/dev/null
+sudo mv /etc/apt/sources.list.d/ubuntu.sources /etc/apt/backup_config/ 2>/dev/null
 ```
 
 #### 步骤3：修改为阿里云源
 
 ```bash
 # 编辑源配置文件
-sudo nano /etc/apt/sources.list.d/ubuntu.sources
+sudo nano /etc/apt/sources.list
 ```
 
-将配置修改为：
+将配置修改为（仅对ubuntu24有效）：
 
 ```yaml
-Types: deb
-URIs: https://mirrors.aliyun.com/ubuntu/
-Suites: noble noble-updates noble-backports noble-security
-Components: main restricted universe multiverse
-Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+deb http://mirrors.aliyun.com/ubuntu/ noble main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ noble main restricted universe multiverse
+
+deb http://mirrors.aliyun.com/ubuntu/ noble-security main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ noble-security main restricted universe multiverse
+
+deb http://mirrors.aliyun.com/ubuntu/ noble-updates main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ noble-updates main restricted universe multiverse
+
+deb http://mirrors.aliyun.com/ubuntu/ noble-backports main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ noble-backports main restricted universe multiverse
 ```
 
 保存并退出（`Ctrl+X`，然后 `Y`，再 `Enter`）
@@ -120,30 +127,23 @@ Claude Code需要Node.js 18或更高版本，本指南使用Node.js 22。
 #### 步骤1：安装必要依赖
 
 ```bash
-sudo apt install -y ca-certificates curl gnupg
+sudo apt install -y ca-certificates curl
 ```
 
-#### 步骤2：添加NodeSource GPG密钥
+#### 步骤2：添加NodeSource 22.x源
 
 ```bash
-mkdir -p /etc/apt/keyrings
-curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 ```
 
-#### 步骤3：添加NodeSource 22.x仓库
-
-```bash
-echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_22.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
-```
-
-#### 步骤4：安装Node.js
+#### 步骤3：安装Node.js
 
 ```bash
 sudo apt update
 sudo apt install -y nodejs
 ```
 
-#### 步骤5：验证安装
+#### 步骤4：验证安装
 
 ```bash
 node --version
@@ -508,61 +508,6 @@ Claude: [执行文件创建操作]
 
 ---
 
-### 常见问题排查
-
-#### 问题1：启动时提示API配置错误
-
-**可能原因**：
-- `settings.json` 配置有误
-- API凭证不正确或已过期
-- 配置文件未生效
-
-**解决方法**：
-```bash
-# 检查配置文件
-cat ~/.claude/settings.json
-
-# 验证JSON格式是否正确
-# 可以使用在线工具：https://jsonlint.com/
-
-# 重新打开终端窗口
-```
-
----
-
-#### 问题2：连接超时或无响应
-
-**可能原因**：
-- 网络连接问题
-- API端点不可访问
-- 超时时间设置过短
-
-**解决方法**：
-```bash
-# 测试网络连接
-ping open.bigmodel.cn
-
-# 增加超时时间（在settings.json中）
-"API_TIMEOUT_MS": "6000000"
-```
-
----
-
-#### 问题3：模型调用失败
-
-**可能原因**：
-- 模型名称配置错误
-- API凭证权限不足
-
-**解决方法**：
-```bash
-# 检查模型配置
-cat ~/.claude/settings.json | grep MODEL
-
-# 确认模型名称正确：
-# - glm-4.7
-# - glm-4.5-air
-```
 
 ---
 
