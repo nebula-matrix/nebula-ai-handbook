@@ -566,3 +566,44 @@ cat ~/.claude/settings.json | grep MODEL
 
 ---
 
+## 补充说明
+
+### 版本升级
+
+定期检查并升级Claude Code以获得最新功能和安全更新：
+
+```bash
+# 检查当前版本
+claude --version
+
+# 升级到最新版本
+claude update
+```
+
+### 推荐版本
+
+- **最低要求**：2.1.42 或更高
+- **推荐使用**：最新稳定版
+
+---
+
+## 相关资源
+
+### 官方文档
+
+- [Claude Code 官方文档](https://docs.anthropic.com/zh-CN/docs/claude-code/overview)
+- [智谱AI开放文档](https://docs.bigmodel.cn/cn/guide/develop/claude)
+
+### 内部文档
+
+- [星云智联VM配置指南](../vm-configuration/星云智联配置VM基础说明.md)
+
+### 技术支持
+
+如遇问题，请联系星云智联技术团队。
+
+---
+
+**文档版本**：v1.0
+**最后更新**：2026年4月13日
+**维护者**：星云智联技术团队
