@@ -371,3 +371,82 @@ claude
 
 ---
 
+## 使用Claude Code
+
+### 命令行调用
+
+#### 启动步骤
+
+```bash
+# 进入项目目录
+cd ~/your-project
+
+# 启动Claude Code
+claude
+```
+
+#### 首次启动
+
+首次启动时，Claude Code会提示是否信任当前目录：
+
+```
+Do you want to allow Claude Code to access files in this directory?
+```
+
+- 输入 `y` 或选择 `Yes` 允许访问
+- 输入 `n` 或选择 `No` 拒绝访问
+
+#### 基本使用
+
+启动后，您可以直接与Claude对话：
+
+```
+You: 帮我创建一个简单的Python Hello World程序
+
+Claude: 我来帮您创建一个简单的Python Hello World程序...
+
+[生成代码]
+```
+
+#### 常用命令
+
+| 命令 | 说明 |
+|------|------|
+| `/help` | 显示帮助信息 |
+| `/status` | 查看当前配置状态 |
+| `/clear` | 清空对话历史 |
+| `/exit` 或 `Ctrl+D` | 退出Claude Code |
+
+---
+
+### VSCode插件调用
+
+#### 方式一：通过命令面板
+
+1. 在VSCode中按 `Ctrl+Shift+P`（Windows/Linux）或 `Cmd+Shift+P`（Mac）打开命令面板
+2. 输入 `Claude Code` 查看可用命令
+3. 选择对应的功能执行
+
+**常用命令**：
+- `Claude Code: Start New Session` - 启动新会话
+- `Claude Code: Explain Code` - 解释选中代码
+- `Claude Code: Refactor Code` - 重构选中代码
+
+#### 方式二：通过Chat面板
+
+1. 在VSCode左侧点击 Claude Code 图标
+2. 在Chat面板中直接输入问题
+3. 可以选中代码后右键选择 `Ask Claude Code`
+
+#### 示例操作
+
+```
+# 在Chat面板中输入
+帮我优化这个函数的性能
+
+# 或选中代码后
+帮我解释这段代码的作用
+```
+
+---
+
