@@ -198,3 +198,176 @@ claude update
 
 ---
 
+## 配置API
+
+### 配置说明
+
+📖 **配置方法参考**：本章节配置方法参考自[智谱AI开放文档 - Claude Code配置指南](https://docs.bigmodel.cn/cn/guide/develop/claude#claude-code)。
+
+API访问凭证由星云智联技术团队统一分配和管理。
+
+---
+
+### 获取公司分配的API凭证
+
+⚠️ **重要**：Claude Code的API访问凭证由星云智联技术团队统一管理和分配。
+
+**获取步骤**：
+
+1. 联系星云智联技术负责人
+2. 申请智谱AI编码套餐访问权限
+3. 获取分配的API凭证
+
+🔐 **安全提示**：获取到的API凭证请妥善保管，不要分享给他人或上传到公开仓库。
+
+---
+
+### 模型选择说明
+
+#### 可用模型
+
+| GLM模型 | 对应Claude模型 | 环境变量 | 用途 | 特点 |
+|---------|---------------|---------|------|------|
+| **GLM-4.7** | Claude Opus/Sonnet | `ANTHROPIC_DEFAULT_OPUS_MODEL`<br>`ANTHROPIC_DEFAULT_SONNET_MODEL` | 日常开发、复杂任务 | 性能与速度平衡 |
+| **GLM-4.5-Air** | Claude Haiku | `ANTHROPIC_DEFAULT_HAIKU_MODEL` | 快速响应、简单任务 | 速度最快，成本最低 |
+
+#### 模型选择建议
+
+- **日常开发**：推荐使用 `GLM-4.7`（对应Opus/Sonnet）
+- **快速查询/简单任务**：推荐使用 `GLM-4.5-Air`（对应Haiku）
+
+---
+
+### 配置环境变量
+
+#### 步骤1：配置 settings.json
+
+```bash
+# 编辑或新增配置文件
+nano ~/.claude/settings.json
+```
+
+添加以下内容（**替换 `your_company_assigned_token` 为您获取的API凭证**）：
+
+```json
+{
+  "env": {
+    "ANTHROPIC_AUTH_TOKEN": "your_company_assigned_token",
+    "ANTHROPIC_BASE_URL": "https://open.bigmodel.cn/api/anthropic",
+    "API_TIMEOUT_MS": "3000000",
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "glm-4.5-air",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "glm-4.7",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "glm-4.7"
+  }
+}
+```
+
+保存并退出（`Ctrl+X`，然后 `Y`，再 `Enter`）
+
+#### 步骤2：配置 .claude.json
+
+```bash
+# 编辑或新增配置文件
+nano ~/.claude.json
+```
+
+添加以下内容：
+
+```json
+{
+  "hasCompletedOnboarding": true
+}
+```
+
+保存并退出（`Ctrl+X`，然后 `Y`，再 `Enter`）
+
+#### 步骤3：验证配置
+
+```bash
+# 查看配置内容
+cat ~/.claude/settings.json
+cat ~/.claude.json
+```
+
+💡 **提示**：配置完成后，请打开新的终端窗口或重新连接VSCode以确保配置生效。
+
+---
+
+### settings.json 样本实例
+
+以下是一个完整的 `~/.claude/settings.json` 配置示例：
+
+```json
+{
+  "env": {
+    "ANTHROPIC_AUTH_TOKEN": "064a10a745c94dd1beb5ce7a09929681.3BYcgsP13aoVLMgT",
+    "ANTHROPIC_BASE_URL": "https://open.bigmodel.cn/api/anthropic",
+    "API_TIMEOUT_MS": "3000000",
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "glm-4.5-air",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "glm-4.7",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "glm-4.7"
+  }
+}
+```
+
+⚠️ **重要提醒**：
+- 上面的 `ANTHROPIC_AUTH_TOKEN` 值仅为示例格式
+- 请务必替换为公司分配给您的实际API凭证
+- 不要使用示例中的凭证值
+
+#### 配置项详细说明
+
+| 配置项 | 示例值 | 说明 |
+|--------|--------|------|
+| `ANTHROPIC_AUTH_TOKEN` | `064a10a745c94d...` | 公司分配的API凭证，必填 |
+| `ANTHROPIC_BASE_URL` | `https://open.bigmodel.cn/api/anthropic` | 智谱AI的API端点，必填 |
+| `API_TIMEOUT_MS` | `3000000` | API请求超时时间（毫秒），推荐值 |
+| `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` | `"1"` | 禁用非必要流量，提升性能 |
+| `ANTHROPIC_DEFAULT_HAIKU_MODEL` | `glm-4.5-air` | 快速任务模型 |
+| `ANTHROPIC_DEFAULT_SONNET_MODEL` | `glm-4.7` | 日常开发模型（默认） |
+| `ANTHROPIC_DEFAULT_OPUS_MODEL` | `glm-4.7` | 复杂任务模型 |
+
+---
+
+### 后续如何修改API配置
+
+#### 修改API凭证
+
+```bash
+# 编辑配置文件
+nano ~/.claude/settings.json
+```
+
+将 `ANTHROPIC_AUTH_TOKEN` 的值替换为新的API凭证。
+
+#### 切换默认模型
+
+```bash
+# 编辑配置文件
+nano ~/.claude/settings.json
+```
+
+修改对应的环境变量值，例如：
+
+```json
+{
+  "env": {
+    "ANTHROPIC_API_KEY": "company_assigned_api_key",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "glm-4.7"
+  }
+}
+```
+
+#### 验证配置生效
+
+```bash
+# 在Claude Code中运行
+claude
+# 然后输入命令
+/status
+```
+
+---
+
