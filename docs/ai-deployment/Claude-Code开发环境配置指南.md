@@ -158,3 +158,43 @@ v22.x.x
 
 ---
 
+## 安装Claude Code
+
+### 安装步骤
+
+#### 步骤1：全局安装Claude Code
+
+```bash
+npm install -g @anthropic-ai/claude-code
+```
+
+#### 步骤2：验证安装
+
+```bash
+claude --version
+```
+
+预期输出：
+```
+2.1.x.x (Claude Code)
+```
+
+⚠️ **重要**：安装完成后，**不要立即运行** `claude` 命令。需要先完成API配置才能正常使用。
+
+### 版本说明
+
+- **最低要求**：2.1.42 或更高
+- **推荐使用**：最新稳定版
+
+#### 检查和升级版本
+
+```bash
+# 检查当前版本
+claude --version
+
+# 升级到最新版本
+claude update
+```
+
+---
+
