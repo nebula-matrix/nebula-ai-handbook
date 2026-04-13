@@ -14,7 +14,7 @@
 
 ### AI开发环境配置
 
-- [Claude Code开发环境配置指南](docs/ai-deployment/Claude-Code开发环境配置指南.md) - 完整的Claude Code安装、配置和使用指南
+- [Claude Code开发环境配置指南](docs/environment-setup/Claude-Code开发环境配置指南.md) - 完整的Claude Code安装、配置和使用指南
 
 ## 🔧 快速导航
 
