@@ -450,3 +450,119 @@ Claude: 我来帮您创建一个简单的Python Hello World程序...
 
 ---
 
+## 测试验证
+
+### 基本连接测试
+
+#### 步骤1：启动Claude Code
+
+```bash
+claude
+```
+
+#### 步骤2：检查配置状态
+
+在Claude Code中输入：
+
+```
+/status
+```
+
+#### 预期输出
+
+```
+Claude Code Version: 2.1.x.x
+API Configuration:
+  Base URL: https://open.bigmodel.cn/api/anthropic
+  Default Model: glm-4.7
+  Status: ✅ Connected
+```
+
+---
+
+### 功能测试
+
+#### 测试1：简单对话测试
+
+```
+You: 请用一句话介绍什么是AI
+
+Claude: 人工智能（AI）是计算机科学的一个分支...
+```
+
+#### 测试2：代码生成测试
+
+```
+You: 用Python写一个计算斐波那契数列的函数
+
+Claude: [生成Python代码]
+```
+
+#### 测试3：文件操作测试
+
+```
+You: 在当前目录创建一个名为test.txt的文件，内容为"Hello Claude"
+
+Claude: [执行文件创建操作]
+```
+
+---
+
+### 常见问题排查
+
+#### 问题1：启动时提示API配置错误
+
+**可能原因**：
+- `settings.json` 配置有误
+- API凭证不正确或已过期
+- 配置文件未生效
+
+**解决方法**：
+```bash
+# 检查配置文件
+cat ~/.claude/settings.json
+
+# 验证JSON格式是否正确
+# 可以使用在线工具：https://jsonlint.com/
+
+# 重新打开终端窗口
+```
+
+---
+
+#### 问题2：连接超时或无响应
+
+**可能原因**：
+- 网络连接问题
+- API端点不可访问
+- 超时时间设置过短
+
+**解决方法**：
+```bash
+# 测试网络连接
+ping open.bigmodel.cn
+
+# 增加超时时间（在settings.json中）
+"API_TIMEOUT_MS": "6000000"
+```
+
+---
+
+#### 问题3：模型调用失败
+
+**可能原因**：
+- 模型名称配置错误
+- API凭证权限不足
+
+**解决方法**：
+```bash
+# 检查模型配置
+cat ~/.claude/settings.json | grep MODEL
+
+# 确认模型名称正确：
+# - glm-4.7
+# - glm-4.5-air
+```
+
+---
+
