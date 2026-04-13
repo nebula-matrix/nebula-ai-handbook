@@ -120,57 +120,41 @@ sudo apt update
 
 ---
 
-### 安装Node.js
+### 安装Node.js 22
 
-Claude Code需要Node.js 18或更高版本。推荐使用 **nvm (Node Version Manager)** 进行安装，便于管理多个Node.js版本。
+Claude Code需要Node.js 18或更高版本，本指南使用Node.js 22。
 
-#### 步骤1：下载并安装nvm
+#### 步骤1：安装必要依赖
 
 ```bash
-# 下载并安装 nvm
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-
-# 代替重启shell
-\. "$HOME/.nvm/nvm.sh"
+sudo apt install -y ca-certificates curl
 ```
 
-#### 步骤2：安装Node.js
+#### 步骤2：添加NodeSource 22.x源
 
 ```bash
-# 下载并安装Node.js（LTS版本）
-nvm install 24
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 ```
 
-#### 步骤3：验证安装
+#### 步骤3：安装Node.js
 
 ```bash
-# 验证Node.js版本
-node -v
+sudo apt update
+sudo apt install -y nodejs
+```
 
-# 验证npm版本
-npm -v
+#### 步骤4：验证安装
+
+```bash
+node --version
+npm --version
 ```
 
 预期输出：
 ```
-v24.14.1
-11.11.0
+v22.x.x
+10.x.x
 ```
-
-💡 **提示**：使用nvm可以方便地在不同Node.js版本之间切换，适合开发环境。
-
-#### 常见问题
-
-**nvm命令找不到**
-
-如果在执行 `nvm` 命令时提示找不到命令，请尝试：
-
-1. 重启终端
-2. 或手动加载nvm：`\. "$HOME/.nvm/nvm.sh"`
-
-**安装速度慢**
-
-如果从官方源下载速度较慢，可以考虑配置国内镜像源加速下载。
 
 ---
 
