@@ -8,18 +8,18 @@
 
 ## 📚 文档目录
 
-### 虚拟机配置
+### 虚拟机配置 (2)
 
 - [星云智联配置VM基础说明](docs/vm-configuration/星云智联配置VM基础说明.md) - 详细的虚拟机创建、配置和SSH连接指南
 - [Windows配置Telnet指南](docs/vm-configuration/Window配置telnet.md) - Windows系统启用Telnet客户端及网络端口测试方法
 
-### AI开发环境配置
+### AI开发环境配置 (1)
 
 - [Claude Code开发环境配置指南](docs/environment-setup/Claude-Code开发环境配置指南.md) - 完整的Claude Code安装、配置和使用指南
 
-### Agent Skills 使用指南
+### Agent Skills 使用指南 (1)
 
-- [Agent Skills 使用指南](docs/agent-skills/README.md) - Agent Skill 的使用方法和最佳实践分享
+- [NBL PPT Builder使用指南](docs/agent-skills/nbl-ppt-builder使用指南.md) - AI驱动的企业PPT自动生成工具，支持Markdown输入和智能模板选择
 
 ## 🔧 快速导航
 
@@ -31,18 +31,24 @@
 
 ### 常见场景
 
+**虚拟机配置：**
 - 🔐 SSH密钥生成与配置
 - 🖥️ 虚拟机克隆与硬件资源配置
 - 🌐 静态IP地址规划
 - 🔗 VSCode远程开发环境搭建
+- 🔍 网络端口连通性测试
+
+**Agent Skills应用：**
+- 📊 自动生成专业PPT演示文稿
+- 📝 Markdown文档转换为可视化演示
+- 🎨 智能模板选择与内容排版
 
 ## 🌟 主要内容
 
-- **模型部署**: 内网环境下的模型部署配置方案
-- **API集成**: 规范的API接入指南
-- **安全合规**: 完整的安全与合规指南
-- **最佳实践**: 经过验证的使用场景和实施方案
-- **故障排查**: 解决内网访问限制、权限配置等常见问题
+- **虚拟机配置**: 完整的VM创建、网络配置和远程连接指南
+- **开发环境**: Claude Code等AI开发工具的安装和配置说明
+- **Agent Skills**: 自动化工具使用方法和最佳实践分享
+- **故障排查**: 解决网络连接、权限配置等常见问题
 
 ## 🤝 贡献指南
 
