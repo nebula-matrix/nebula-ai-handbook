@@ -11,6 +11,7 @@
    - [切换apt源为阿里云](#切换apt源为阿里云)
    - [安装Node.js 24](#安装nodejs-24)
    - [配置Git SSH密钥](#配置git-ssh密钥)
+   - [挂载NFS共享目录](#挂载nfs共享目录)
 3. [安装Claude Code](#安装claude-code)
 4. [配置API](#配置api)
    - [获取公司分配的API凭证](#获取公司分配的api凭证)
@@ -326,6 +327,45 @@ git config --global user.email "your_email@example.com"
 
 ---
 
+### 挂载NFS共享目录
+
+红区复制出来的文件会存放在NFS共享目录中，需要手动挂载才能访问。
+
+#### 步骤1：安装NFS客户端工具
+
+```bash
+sudo apt install -y nfs-common
+```
+
+#### 步骤2：创建挂载目录
+
+```bash
+sudo mkdir -p /mnt/share
+```
+
+#### 步骤3：挂载服务端的共享目录
+
+```bash
+sudo mount -t nfs 10.10.110.10:/share /mnt/share
+```
+
+#### 步骤4：验证挂载
+
+```bash
+# 查看挂载情况
+df -h | grep share
+
+# 或查看挂载目录内容
+ls /mnt/share
+```
+
+💡 **提示**：以上挂载为临时挂载，系统重启后需要重新挂载。如需开机自动挂载，请将以下内容添加到 `/etc/fstab`：
+```
+10.10.110.10:/share /mnt/share nfs defaults 0 0
+```
+
+---
+
 ## 安装Claude Code
 
 ### 安装步骤
@@ -394,15 +434,15 @@ API访问凭证由星云智联技术团队统一分配和管理。
 
 #### 可用模型
 
-| GLM模型 | 对应Claude模型 | 环境变量 | 用途 | 特点 |
+| 模型 | 对应模型 | 环境变量 | 用途 | 特点 |
 |---------|---------------|---------|------|------|
-| **GLM-4.7** | Claude Opus/Sonnet | `ANTHROPIC_DEFAULT_OPUS_MODEL`<br>`ANTHROPIC_DEFAULT_SONNET_MODEL` | 日常开发、复杂任务 | 性能与速度平衡 |
-| **GLM-4.5-Air** | Claude Haiku | `ANTHROPIC_DEFAULT_HAIKU_MODEL` | 快速响应、简单任务 | 速度最快，成本最低 |
+| **llm-large-claude** | GLM-4.7 | `ANTHROPIC_DEFAULT_OPUS_MODEL`<br>`ANTHROPIC_DEFAULT_SONNET_MODEL`<br>`ANTHROPIC_DEFAULT_HAIKU_MODEL` | 日常开发、复杂任务 | 性能与速度平衡 |
+| **llm-ultra-claude** | Kimi-2.5 | `ANTHROPIC_DEFAULT_OPUS_MODEL`<br>`ANTHROPIC_DEFAULT_SONNET_MODEL`<br>`ANTHROPIC_DEFAULT_HAIKU_MODEL` | 复杂推理、深度分析 | 更强的推理能力 |
 
 #### 模型选择建议
 
-- **日常开发**：推荐使用 `GLM-4.7`（对应Opus/Sonnet）
-- **快速查询/简单任务**：推荐使用 `GLM-4.5-Air`（对应Haiku）
+- **日常开发**：推荐使用 `llm-large-claude`（对应 GLM-4.7）
+- **复杂推理任务**：推荐使用 `llm-ultra-claude`（对应 Kimi-2.5）
 
 ---
 
@@ -420,13 +460,13 @@ nano ~/.claude/settings.json
 ```json
 {
   "env": {
-    "ANTHROPIC_AUTH_TOKEN": "your_company_assigned_token",
-    "ANTHROPIC_BASE_URL": "https://open.bigmodel.cn/api/anthropic",
+    "ANTHROPIC_AUTH_TOKEN": "<密钥>",
+    "ANTHROPIC_BASE_URL": "https://gateway.ai.dpu.tech",
     "API_TIMEOUT_MS": "3000000",
     "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
-    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "glm-4.5-air",
-    "ANTHROPIC_DEFAULT_SONNET_MODEL": "glm-4.7",
-    "ANTHROPIC_DEFAULT_OPUS_MODEL": "glm-4.7"
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "llm-large-claude",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "llm-large-claude",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "llm-large-claude"
   }
 }
 ```
@@ -469,13 +509,13 @@ cat ~/.claude.json
 ```json
 {
   "env": {
-    "ANTHROPIC_AUTH_TOKEN": "064a10a745c94dd1beb5ce7a09929681.3BYcgsP13aoVLMgT",
-    "ANTHROPIC_BASE_URL": "https://open.bigmodel.cn/api/anthropic",
+    "ANTHROPIC_AUTH_TOKEN": "<密钥>",
+    "ANTHROPIC_BASE_URL": "https://gateway.ai.dpu.tech",
     "API_TIMEOUT_MS": "3000000",
     "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
-    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "glm-4.5-air",
-    "ANTHROPIC_DEFAULT_SONNET_MODEL": "glm-4.7",
-    "ANTHROPIC_DEFAULT_OPUS_MODEL": "glm-4.7"
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "llm-large-claude",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "llm-large-claude",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "llm-large-claude"
   }
 }
 ```
@@ -489,13 +529,13 @@ cat ~/.claude.json
 
 | 配置项 | 示例值 | 说明 |
 |--------|--------|------|
-| `ANTHROPIC_AUTH_TOKEN` | `064a10a745c94d...` | 公司分配的API凭证，必填 |
-| `ANTHROPIC_BASE_URL` | `https://open.bigmodel.cn/api/anthropic` | 智谱AI的API端点，必填 |
+| `ANTHROPIC_AUTH_TOKEN` | `<密钥>` | 公司分配的API凭证，必填 |
+| `ANTHROPIC_BASE_URL` | `https://gateway.ai.dpu.tech` | API网关端点，必填 |
 | `API_TIMEOUT_MS` | `3000000` | API请求超时时间（毫秒），推荐值 |
 | `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` | `"1"` | 禁用非必要流量，提升性能 |
-| `ANTHROPIC_DEFAULT_HAIKU_MODEL` | `glm-4.5-air` | 快速任务模型 |
-| `ANTHROPIC_DEFAULT_SONNET_MODEL` | `glm-4.7` | 日常开发模型（默认） |
-| `ANTHROPIC_DEFAULT_OPUS_MODEL` | `glm-4.7` | 复杂任务模型 |
+| `ANTHROPIC_DEFAULT_HAIKU_MODEL` | `llm-large-claude` | 快速任务模型 |
+| `ANTHROPIC_DEFAULT_SONNET_MODEL` | `llm-large-claude` | 日常开发模型（默认） |
+| `ANTHROPIC_DEFAULT_OPUS_MODEL` | `llm-large-claude` | 复杂任务模型 |
 
 ---
 
@@ -523,7 +563,7 @@ nano ~/.claude/settings.json
 {
   "env": {
     "ANTHROPIC_API_KEY": "company_assigned_api_key",
-    "ANTHROPIC_DEFAULT_SONNET_MODEL": "glm-4.7"
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "llm-large-claude"
   }
 }
 ```
