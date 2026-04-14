@@ -217,7 +217,7 @@ ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
 2. 输入密码短语（可选，建议设置以增强安全性）
 3. 确认密码短语
 
-⚠️ **注意**：请将 `your_email@example.com` 替换为您的实际邮箱地址。
+⚠️ **注意**：请将 `your_email@example.com` 替换为您的实际公司邮箱地址。
 
 #### 步骤3：添加SSH密钥到Git平台
 
@@ -241,29 +241,12 @@ cat ~/.ssh/id_rsa.pub
 3. 粘贴公钥内容
 4. 点击 "Add SSH key"
 
-**GitLab**：
-1. 访问 [GitLab SSH设置](https://gitlab.com/-/profile/keys)
-2. 点击 "Add new key"
-3. 粘贴公钥内容
-4. 点击 "Add key"
-
-**Gitee（码云）**：
-1. 访问 [Gitee SSH设置](https://gitee.com/profile/sshkeys)
-2. 点击 "添加公钥"
-3. 粘贴公钥内容
-4. 点击 "确定"
 
 #### 步骤4：测试SSH连接
 
 ```bash
 # 测试GitHub
 ssh -T git@github.com
-
-# 测试GitLab
-ssh -T git@gitlab.com
-
-# 测试Gitee
-ssh -T git@gitee.com
 ```
 
 首次连接会提示确认指纹，输入 `yes` 即可。
@@ -273,7 +256,63 @@ ssh -T git@gitee.com
 Hi username! You've successfully authenticated, but GitHub does not provide shell access.
 ```
 
-#### 步骤5：配置Git用户信息
+#### 步骤5：拉取公司仓库
+
+完成SSH密钥配置后，可以拉取星云智联的内部仓库。
+
+##### 拉取nebula-ai-handbook仓库
+
+```bash
+# 克隆仓库到本地
+git clone git@github.com:nebula-matrix/nebula-ai-handbook.git
+
+# 进入仓库目录
+cd nebula-ai-handbook
+```
+
+##### 常用Git操作
+
+```bash
+# 拉取最新代码
+git pull
+
+# 查看当前状态
+git status
+
+# 查看分支
+git branch -a
+
+# 切换分支
+git checkout <branch-name>
+```
+
+##### 提交代码流程
+
+```bash
+# 1. 查看修改内容
+git status
+git diff
+
+# 2. 添加修改的文件
+git add <file-name>
+# 或添加所有修改
+git add .
+
+# 3. 提交修改
+git commit -m "描述修改内容"
+
+# 4. 推送到远程仓库
+git push
+```
+
+⚠️ **重要提示**：
+- 推送代码前请确保已获得仓库的写入权限
+- 提交信息请清晰描述修改内容
+- 建议在推送前先执行 `git pull` 确保代码是最新的
+
+---
+
+#### 步骤6：配置Git用户信息
 
 ```bash
 # 配置全局用户名
@@ -285,7 +324,7 @@ git config --global user.email "your_email@example.com"
 
 ⚠️ **重要**：请将用户名和邮箱替换为您的实际信息。
 
-#### 步骤6：将远程仓库URL切换为SSH方式（如需要）
+#### 步骤7：将远程仓库URL切换为SSH方式（如需要）
 
 如果当前仓库使用HTTPS方式，可以切换为SSH：
 
@@ -296,18 +335,6 @@ git remote -v
 # 切换为SSH方式
 git remote set-url origin git@github.com:username/repo.git
 ```
-
-#### 常见问题
-
-**问题1**：SSH连接超时或失败
-- 检查网络连接和防火墙设置
-- 确认SSH端口（默认22）未被阻止
-- 尝试使用HTTPS方式代替
-
-**问题2**：权限被拒绝（Permission denied）
-- 确认公钥已正确添加到Git平台
-- 检查私钥文件权限：`chmod 600 ~/.ssh/id_*`
-- 确认使用的密钥与添加到平台的一致
 
 ---
 
