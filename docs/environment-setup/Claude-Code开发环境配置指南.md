@@ -222,7 +222,9 @@ export HTTPS_PROXY="http://10.10.14.15:9999"
 
 💡 **提示**：以上代理设置为临时生效，仅对当前终端会话有效。
 
-#### 步骤2：下载并安装nvm([nodejs官网说明](https://nodejs.org/en/download))
+#### 步骤2：下载并安装nvm
+
+以[nodejs官网说明](https://nodejs.org/en/download)为准，以下是2026.4.14的官网说明，供参考：
 
 ```bash
 # 下载并安装 nvm
