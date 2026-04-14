@@ -17,6 +17,10 @@
 
 - [Claude Code开发环境配置指南](docs/environment-setup/Claude-Code开发环境配置指南.md) - 完整的Claude Code安装、配置和使用指南
 
+### Agent Skills 使用指南
+
+- [Agent Skills 使用指南](docs/agent-skills/README.md) - Agent Skill 的使用方法和最佳实践分享
+
 ## 🔧 快速导航
 
 ### 新手入门
