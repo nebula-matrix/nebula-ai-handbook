@@ -189,46 +189,84 @@ apt:
 
 Claude Code需要Node.js 18或更高版本，本指南使用Node.js 24。
 
-#### 步骤0：卸载旧版本（可选但推荐，防止依赖冲突）
+#### 卸载旧版本（如有）
 
-如果之前通过apt安装过其他版本的nodejs，建议先清理：
+如果之前通过apt安装过Node.js，建议先卸载：
 
 ```bash
 sudo apt-get remove nodejs npm
 sudo apt-get autoremove
 ```
 
-#### 步骤1：安装必要依赖
+#### 为什么不推荐通过apt安装Node.js？
+
+通过apt安装Node.js存在以下隐患：
+
+1. **版本过旧**：apt源中的Node.js版本通常较旧，可能不满足Claude Code的最低版本要求
+2. **权限问题**：apt安装的Node.js位于系统目录（如`/usr/bin`），后续使用npm全局安装包时需要sudo权限
+3. **官方不推荐**：Claude Code官方文档明确不推荐使用`sudo npm install -g`进行全局安装，因为这可能导致权限混乱和安全隐患
+
+因此，本指南采用nvm（Node Version Manager）进行安装，这是Node.js官方推荐的安装方式，可以将Node.js安装在用户目录下，无需sudo权限。
+
+⚠️ **重要提示**：由于受国内网络影响，nvm和Node.js的下载可能较慢或失败。需要先设置代理服务器进行加速下载。
+
+#### 步骤1：设置终端代理
+（临时方案，后续支持透明代理后，此部分再做更新说明）
 
 ```bash
-sudo apt install -y ca-certificates curl
+export http_proxy="http://10.10.14.15:9999"
+export https_proxy="http://10.10.14.15:9999"
+export HTTP_PROXY="http://10.10.14.15:9999"
+export HTTPS_PROXY="http://10.10.14.15:9999"
 ```
 
-#### 步骤2：添加NodeSource 24.x源
+💡 **提示**：以上代理设置为临时生效，仅对当前终端会话有效。
+
+#### 步骤2：下载并安装nvm([nodejs官网说明](https://nodejs.org/en/download))
 
 ```bash
-curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
+# 下载并安装 nvm
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | bash
+
+# 加载nvm（无需重启终端）
+\. "$HOME/.nvm/nvm.sh"
 ```
 
-#### 步骤3：安装Node.js
+#### 步骤3：使用nvm安装Node.js
 
 ```bash
-sudo apt update
-sudo apt install -y nodejs
+# 下载并安装 Node.js 24
+nvm install 24
 ```
 
 #### 步骤4：验证安装
 
 ```bash
-node --version
-npm --version
+# 验证 Node.js 版本
+node -v
+# 应输出: v24.14.1
+
+# 验证 npm 版本
+npm -v
+# 应输出: 11.11.0
+
+# 确认安装位置（应在home目录，而非全局根目录）
+which npm
+# 应输出: /home/你的用户名/.nvm/versions/node/v24.14.1/bin/npm
 ```
 
-预期输出：
+#### 步骤5：取消代理设置
+
+安装完成后，建议取消代理环境变量，避免代理服务器持续生效影响其他网络请求。
+
+```bash
+unset http_proxy
+unset https_proxy
+unset HTTP_PROXY
+unset HTTPS_PROXY
 ```
-v24.x.x
-11.x.x
-```
+
+💡 **提示**：关闭当前终端窗口重新打开，代理设置也会自动失效。
 
 ---
 
