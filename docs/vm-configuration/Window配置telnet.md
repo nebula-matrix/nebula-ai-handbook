@@ -157,26 +157,6 @@ telnet 10.10.110.101 22
 
 ---
 
-### 问题4：如何批量测试多个端口
-
-可以使用PowerShell脚本批量测试：
-
-```powershell
-$server = "10.10.110.101"
-$ports = @(22, 80, 443)
-
-foreach ($port in $ports) {
-    $result = Test-NetConnection -ComputerName $server -Port $port
-    if ($result.TcpTestSucceeded) {
-        Write-Host "端口 $port: 开放" -ForegroundColor Green
-    } else {
-        Write-Host "端口 $port: 关闭" -ForegroundColor Red
-    }
-}
-```
-
----
-
 ## 附录
 
 ### 常用端口列表
