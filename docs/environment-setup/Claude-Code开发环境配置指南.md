@@ -9,7 +9,8 @@
 1. [前置条件](#前置条件)
 2. [环境准备](#环境准备)
    - [切换apt源为阿里云](#切换apt源为阿里云)
-   - [安装Node.js 22](#安装nodejs-22)
+   - [安装Node.js 24](#安装nodejs-24)
+   - [配置Git SSH密钥](#配置git-ssh密钥)
 3. [安装Claude Code](#安装claude-code)
 4. [配置API](#配置api)
    - [获取公司分配的API凭证](#获取公司分配的api凭证)
@@ -21,7 +22,6 @@
    - [命令行调用](#命令行调用)
    - [VSCode插件调用](#vscode插件调用)
 6. [测试验证](#测试验证)
-   - [基本连接测试](#基本连接测试)
    - [功能测试](#功能测试)
 7. [补充说明](#补充说明)
 8. [相关资源](#相关资源)
@@ -81,23 +81,23 @@ sudo mv /etc/apt/sources.list.d/ubuntu.sources /etc/apt/backup_config/ 2>/dev/nu
 
 ```bash
 # 编辑源配置文件
-sudo nano /etc/apt/sources.list
+sudo nano /etc/apt/sources.list.d/ubuntu.sources
 ```
 
 将配置修改为（仅对ubuntu24有效）：
 
 ```yaml
-deb http://mirrors.aliyun.com/ubuntu/ noble main restricted universe multiverse
-deb-src http://mirrors.aliyun.com/ubuntu/ noble main restricted universe multiverse
+Types: deb
+URIs: http://mirrors.aliyun.com/ubuntu/
+Suites: noble noble-updates noble-backports
+Components: main restricted universe multiverse
+Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
 
-deb http://mirrors.aliyun.com/ubuntu/ noble-security main restricted universe multiverse
-deb-src http://mirrors.aliyun.com/ubuntu/ noble-security main restricted universe multiverse
-
-deb http://mirrors.aliyun.com/ubuntu/ noble-updates main restricted universe multiverse
-deb-src http://mirrors.aliyun.com/ubuntu/ noble-updates main restricted universe multiverse
-
-deb http://mirrors.aliyun.com/ubuntu/ noble-backports main restricted universe multiverse
-deb-src http://mirrors.aliyun.com/ubuntu/ noble-backports main restricted universe multiverse
+Types: deb
+URIs: http://mirrors.aliyun.com/ubuntu/
+Suites: noble-security
+Components: main restricted universe multiverse
+Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
 ```
 
 保存并退出（`Ctrl+X`，然后 `Y`，再 `Enter`）
@@ -110,6 +110,28 @@ sudo apt update
 
 预期输出：应该看到 "Hit" 和 "Get" 消息，表示正在从阿里云镜像获取包列表
 
+
+#### 步骤5：解决重启后文件被清空的问题 (cloud-init 拦截)
+
+服务器如果运行 cloud-init 服务。默认情况下，它会在系统启动时读取云厂商的元数据（Metadata），并根据默认模板重新生成 ubuntu.sources，从而覆盖你的手动修改。
+
+##### 解决方案：通过 Cloud-init 配置文件规范拦截
+
+我们需要告诉 cloud-init 的 apt 模块：“保留系统现有的源列表，不要去动它”。
+
+```bash
+sudo nano /etc/cloud/cloud.cfg.d/99-disable-apt-overwrite.cfg
+```
+
+写入以下 YAML 内容（注意缩进，YAML对空格敏感）：
+
+```YAML
+apt:
+  preserve_sources_list: true
+```
+
+保存并退出。下次重启时，cloud-init 看到 preserve_sources_list: true，就会放弃对 APT 源的覆写。
+
 #### 其他发行版参考
 
 | 发行版 | 镜像站地址 |
@@ -120,9 +142,18 @@ sudo apt update
 
 ---
 
-### 安装Node.js 22
+### 安装Node.js 24
 
-Claude Code需要Node.js 18或更高版本，本指南使用Node.js 22。
+Claude Code需要Node.js 18或更高版本，本指南使用Node.js 24。
+
+#### 步骤0：卸载旧版本（可选但推荐，防止依赖冲突）
+
+如果之前通过apt安装过其他版本的nodejs，建议先清理：
+
+```bash
+sudo apt-get remove nodejs npm
+sudo apt-get autoremove
+```
 
 #### 步骤1：安装必要依赖
 
@@ -130,10 +161,10 @@ Claude Code需要Node.js 18或更高版本，本指南使用Node.js 22。
 sudo apt install -y ca-certificates curl
 ```
 
-#### 步骤2：添加NodeSource 22.x源
+#### 步骤2：添加NodeSource 24.x源
 
 ```bash
-curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
 ```
 
 #### 步骤3：安装Node.js
@@ -152,9 +183,131 @@ npm --version
 
 预期输出：
 ```
-v22.x.x
-10.x.x
+v24.x.x
+11.x.x
 ```
+
+---
+
+### 配置Git SSH密钥
+
+配置SSH密钥后，可以使用SSH方式拉取和推送代码，无需每次输入密码。
+
+#### 步骤1：检查现有SSH密钥
+
+```bash
+# 检查是否已有SSH密钥
+ls -la ~/.ssh
+```
+
+如果看到 `id_rsa` 和 `id_rsa.pub`（或 `id_ed25519` 和 `id_ed25519.pub`），说明已有密钥，可以直接跳到[步骤3](#步骤3添加ssh密钥到git平台)。
+
+#### 步骤2：生成新的SSH密钥
+
+```bash
+# 生成ED25519类型密钥（推荐）
+ssh-keygen -t ed25519 -C "your_email@example.com"
+
+# 或使用RSA类型（兼容性更好）
+ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
+```
+
+执行过程：
+1. 按Enter接受默认保存位置（`~/.ssh/id_ed25519` 或 `~/.ssh/id_rsa`）
+2. 输入密码短语（可选，建议设置以增强安全性）
+3. 确认密码短语
+
+⚠️ **注意**：请将 `your_email@example.com` 替换为您的实际邮箱地址。
+
+#### 步骤3：添加SSH密钥到Git平台
+
+##### 查看公钥内容
+
+```bash
+# ED25519密钥
+cat ~/.ssh/id_ed25519.pub
+
+# RSA密钥
+cat ~/.ssh/id_rsa.pub
+```
+
+复制输出的完整内容（从 `ssh-` 开始到邮箱结束）。
+
+##### 添加到Git平台
+
+**GitHub**：
+1. 访问 [GitHub SSH设置](https://github.com/settings/ssh)
+2. 点击 "New SSH key"
+3. 粘贴公钥内容
+4. 点击 "Add SSH key"
+
+**GitLab**：
+1. 访问 [GitLab SSH设置](https://gitlab.com/-/profile/keys)
+2. 点击 "Add new key"
+3. 粘贴公钥内容
+4. 点击 "Add key"
+
+**Gitee（码云）**：
+1. 访问 [Gitee SSH设置](https://gitee.com/profile/sshkeys)
+2. 点击 "添加公钥"
+3. 粘贴公钥内容
+4. 点击 "确定"
+
+#### 步骤4：测试SSH连接
+
+```bash
+# 测试GitHub
+ssh -T git@github.com
+
+# 测试GitLab
+ssh -T git@gitlab.com
+
+# 测试Gitee
+ssh -T git@gitee.com
+```
+
+首次连接会提示确认指纹，输入 `yes` 即可。
+
+成功示例（GitHub）：
+```
+Hi username! You've successfully authenticated, but GitHub does not provide shell access.
+```
+
+#### 步骤5：配置Git用户信息
+
+```bash
+# 配置全局用户名
+git config --global user.name "Your Name"
+
+# 配置全局邮箱
+git config --global user.email "your_email@example.com"
+```
+
+⚠️ **重要**：请将用户名和邮箱替换为您的实际信息。
+
+#### 步骤6：将远程仓库URL切换为SSH方式（如需要）
+
+如果当前仓库使用HTTPS方式，可以切换为SSH：
+
+```bash
+# 查看当前远程仓库URL
+git remote -v
+
+# 切换为SSH方式
+git remote set-url origin git@github.com:username/repo.git
+```
+
+#### 常见问题
+
+**问题1**：SSH连接超时或失败
+- 检查网络连接和防火墙设置
+- 确认SSH端口（默认22）未被阻止
+- 尝试使用HTTPS方式代替
+
+**问题2**：权限被拒绝（Permission denied）
+- 确认公钥已正确添加到Git平台
+- 检查私钥文件权限：`chmod 600 ~/.ssh/id_*`
+- 确认使用的密钥与添加到平台的一致
 
 ---
 
@@ -421,6 +574,8 @@ Claude: 我来帮您创建一个简单的Python Hello World程序...
 
 ### VSCode插件调用
 
+可以在VSCode的扩展页面搜索`Claude Code for VS Code`安装Anthropic官方插件。
+
 #### 方式一：通过命令面板
 
 1. 在VSCode中按 `Ctrl+Shift+P`（Windows/Linux）或 `Cmd+Shift+P`（Mac）打开命令面板
@@ -428,57 +583,16 @@ Claude: 我来帮您创建一个简单的Python Hello World程序...
 3. 选择对应的功能执行
 
 **常用命令**：
-- `Claude Code: Start New Session` - 启动新会话
-- `Claude Code: Explain Code` - 解释选中代码
-- `Claude Code: Refactor Code` - 重构选中代码
+- `Claude Code: Open in New Window` - 启动新窗口会话
+- `Claude Code: Open in Terminal` - 启动新终端打开会话
 
 #### 方式二：通过Chat面板
 
 1. 在VSCode左侧点击 Claude Code 图标
 2. 在Chat面板中直接输入问题
-3. 可以选中代码后右键选择 `Ask Claude Code`
 
-#### 示例操作
-
-```
-# 在Chat面板中输入
-帮我优化这个函数的性能
-
-# 或选中代码后
-帮我解释这段代码的作用
-```
-
----
 
 ## 测试验证
-
-### 基本连接测试
-
-#### 步骤1：启动Claude Code
-
-```bash
-claude
-```
-
-#### 步骤2：检查配置状态
-
-在Claude Code中输入：
-
-```
-/status
-```
-
-#### 预期输出
-
-```
-Claude Code Version: 2.1.x.x
-API Configuration:
-  Base URL: https://open.bigmodel.cn/api/anthropic
-  Default Model: glm-4.7
-  Status: ✅ Connected
-```
-
----
 
 ### 功能测试
 
@@ -505,9 +619,6 @@ You: 在当前目录创建一个名为test.txt的文件，内容为"Hello Claude
 
 Claude: [执行文件创建操作]
 ```
-
----
-
 
 ---
 
