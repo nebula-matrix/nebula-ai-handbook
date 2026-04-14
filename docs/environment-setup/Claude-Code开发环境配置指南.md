@@ -72,10 +72,10 @@ cat /etc/os-release
 #### 步骤2：备份原配置
 
 ```bash
-# 备份原配置文件
+# 备份和清理原配置文件
 sudo mkdir /etc/apt/backup_config
-sudo mv /etc/apt/sources.list /etc/apt/backup_config/ 2>/dev/null
-sudo mv /etc/apt/sources.list.d/ubuntu.sources /etc/apt/backup_config/ 2>/dev/null
+sudo mv /etc/apt/sources.list /etc/apt/backup_config/
+sudo mv /etc/apt/sources.list.d/ubuntu.sources /etc/apt/backup_config/
 ```
 
 #### 步骤3：修改为阿里云源
@@ -111,8 +111,50 @@ sudo apt update
 
 预期输出：应该看到 "Hit" 和 "Get" 消息，表示正在从阿里云镜像获取包列表
 
+#### 步骤5：解决Docker源网络问题
 
-#### 步骤5：解决重启后文件被清空的问题 (cloud-init 拦截)
+运行 `sudo apt update` 时，可能会遇到以下错误：
+
+```
+Err:9 https://download.docker.com/linux/ubuntu noble InRelease
+  Could not handshake: Error in the pull function. [IP: 108.139.10.78 443]
+
+W: Failed to fetch https://download.docker.com/linux/ubuntu/dists/noble/InRelease
+  Could not handshake: Error in the pull function. [IP: 108.139.10.78 443]
+W: Some index files failed to download. They have been ignored, or old ones used instead.
+```
+
+**原因**：Docker官方源可能因网络问题不可达，导致更新失败。
+
+**解决方案**：禁用Docker源，让apt忽略它。
+
+```bash
+# 1. 查找 Docker 源文件的准确名称
+ls /etc/apt/sources.list.d/ | grep docker
+
+例如终端给出
+docker.sources
+
+# 2. 将其重命名（禁用它）
+sudo mv /etc/apt/sources.list.d/docker.sources /etc/apt/sources.list.d/docker.sources.disable
+
+# 3. 重新运行更新
+sudo apt update
+
+# 4. 运行结果，可以看到docker源已被忽略
+Hit:1 http://mirrors.aliyun.com/ubuntu noble InRelease
+Hit:2 http://mirrors.aliyun.com/ubuntu noble-updates InRelease
+Hit:3 http://mirrors.aliyun.com/ubuntu noble-backports InRelease
+Hit:4 http://mirrors.aliyun.com/ubuntu noble-security InRelease
+Hit:5 https://deb.nodesource.com/node_24.x nodistro InRelease
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+33 packages can be upgraded. Run 'apt list --upgradable' to see them.
+N: Ignoring file 'docker.sources.disable' in directory '/etc/apt/sources.list.d/' as it has an invalid filename extension
+```
+
+#### 步骤6：解决重启后文件被清空的问题 (cloud-init 拦截)
 
 服务器如果运行 cloud-init 服务。默认情况下，它会在系统启动时读取云厂商的元数据（Metadata），并根据默认模板重新生成 ubuntu.sources，从而覆盖你的手动修改。
 
