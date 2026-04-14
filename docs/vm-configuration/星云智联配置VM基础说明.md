@@ -521,7 +521,12 @@ Host 展示VM连接
 **解决方法：**
 1. 在PVE控制台中检查虚拟机运行状态
 2. 使用 `ping` 命令测试网络连通性
-3. 检查云防火墙规则是否开放22端口
+3. 使用telnet测试SSH端口(22)是否可访问：
+   ```bash
+   telnet <虚拟机IP地址> 22
+   ```
+   > 💡 如果telnet未安装，请参考 [Windows配置Telnet指南](Window配置telnet.md)
+4. 检查云防火墙规则是否开放22端口
 
 ---
 
@@ -533,9 +538,15 @@ Host 展示VM连接
 - 密钥密码输入错误
 
 **解决方法：**
-1. 确认Cloud-Init中的SSH public key已正确配置
-2. 验证本地私钥文件路径是否正确
-3. 重新输入密钥密码
+1. 先使用telnet测试SSH端口是否可访问：
+   ```bash
+   telnet <虚拟机IP地址> 22
+   ```
+   如果能看到SSH版本信息（如 `SSH-2.0-OpenSSH_8.9`），说明网络和SSH服务正常
+   > 💡 如果telnet未安装，请参考 [Windows配置Telnet指南](Window配置telnet.md)
+2. 确认Cloud-Init中的SSH public key已正确配置
+3. 验证本地私钥文件路径是否正确
+4. 重新输入密钥密码
 
 ---
 

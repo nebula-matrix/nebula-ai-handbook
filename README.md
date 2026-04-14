@@ -11,6 +11,7 @@
 ### 虚拟机配置
 
 - [星云智联配置VM基础说明](docs/vm-configuration/星云智联配置VM基础说明.md) - 详细的虚拟机创建、配置和SSH连接指南
+- [Windows配置Telnet指南](docs/vm-configuration/Window配置telnet.md) - Windows系统启用Telnet客户端及网络端口测试方法
 
 ### AI开发环境配置
 
