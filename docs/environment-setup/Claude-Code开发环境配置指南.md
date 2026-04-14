@@ -324,18 +324,6 @@ git config --global user.email "your_email@example.com"
 
 ⚠️ **重要**：请将用户名和邮箱替换为您的实际信息。
 
-#### 步骤7：将远程仓库URL切换为SSH方式（如需要）
-
-如果当前仓库使用HTTPS方式，可以切换为SSH：
-
-```bash
-# 查看当前远程仓库URL
-git remote -v
-
-# 切换为SSH方式
-git remote set-url origin git@github.com:username/repo.git
-```
-
 ---
 
 ## 安装Claude Code
