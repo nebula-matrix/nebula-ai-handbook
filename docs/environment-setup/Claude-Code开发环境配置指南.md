@@ -10,6 +10,7 @@
 2. [环境准备](#环境准备)
    - [切换apt源为阿里云](#切换apt源为阿里云)
    - [安装Node.js 24](#安装nodejs-24)
+   - [安装uv（Python包管理器）](#安装uvpython包管理器)
    - [配置Git SSH密钥](#配置git-ssh密钥)
    - [挂载NFS共享目录](#挂载nfs共享目录)
 3. [安装Claude Code](#安装claude-code)
@@ -269,6 +270,62 @@ unset HTTPS_PROXY
 ```
 
 💡 **提示**：关闭当前终端窗口重新打开，代理设置也会自动失效。
+
+---
+
+### 安装uv（Python包管理器）
+
+uv是一个现代化的Python包管理器，速度极快，可以替代pip和pip-tools。
+
+本节内容以[uv官网](https://docs.astral.sh/uv/getting-started/installation/)为准，以下是基于2026年4月16日的官网说明，供参考。
+
+#### 步骤1：安装uv
+
+在Linux系统上，可以使用以下命令安装：
+（如果速度过慢，可以参考nodejs章节采用的代理安装方法，注意安装完毕后取消代理）
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+安装完成后，需要重新加载shell配置或重新打开终端：
+
+```bash
+# 重新加载shell配置（以bash为例）
+source ~/.bashrc
+```
+
+#### 步骤2：验证安装
+
+```bash
+# 验证uv版本
+uv --version
+```
+
+#### 步骤3：配置Shell自动补全（bash）
+
+如果使用bash，执行以下命令配置自动补全：
+
+```bash
+# 生成补全脚本并添加到.bashrc
+echo 'eval "$(uv generate-shell-completion bash)"' >> ~/.bashrc
+
+# 重新加载配置
+source ~/.bashrc
+```
+
+#### 自动补全使用方法
+
+配置完成后，在输入uv命令时可以：
+
+- 输入命令部分字符后按 `Tab` 键，自动补全命令或显示可选选项
+- 例如：
+  ```bash
+  uv pip in<Tab>    # 自动补全为 uv pip install
+  uv <Tab><Tab>     # 显示所有可用子命令
+  ```
+
+💡 **提示**：自动补全功能需要重新打开终端或执行 `source ~/.bashrc` 后生效。
 
 ---
 
