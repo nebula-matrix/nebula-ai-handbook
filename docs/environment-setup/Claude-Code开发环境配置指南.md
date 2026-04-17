@@ -785,6 +785,38 @@ Claude: 我来帮您创建一个简单的Python Hello World程序...
 1. 在VSCode左侧点击 Claude Code 图标
 2. 在Chat面板中直接输入问题
 
+---
+
+### 插件市场与技能安装
+
+Claude Code支持通过插件市场扩展功能。星云智联提供了企业内部的技能插件库，可以为Claude Code添加特定领域的专业能力。
+
+#### 添加星云市场
+
+在Claude Code对话中输入以下命令添加星云智联的插件市场：
+
+```
+/plugin marketplace add git@github.com:nebula-matrix/nebula-matrix-skills.git
+```
+
+#### 安装插件
+
+添加市场后，输入 `/plugin` 命令打开插件管理界面，在 `Marketplaces` 部分可以安装和管理插件。
+
+#### 常见问题
+
+如果在添加市场时遇到SSH认证失败的问题，通常是因为SSH密钥设置了密码短语（Passphrase）。解决方案是使用 `ssh-agent` 托管密钥：
+
+```bash
+# 启动ssh-agent
+eval "$(ssh-agent -s)"
+
+# 添加密钥（根据实际密钥类型选择）
+ssh-add ~/.ssh/id_ed25519
+```
+
+📖 **详细说明**：关于市场与插件的完整使用指南，请参考[Claude Code插件市场使用指南](../agent-skills/Claude-Code插件市场使用指南.md)。
+
 
 ## 测试验证
 
