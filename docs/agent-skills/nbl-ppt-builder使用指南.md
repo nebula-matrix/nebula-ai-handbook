@@ -49,7 +49,7 @@ nbl-ppt-builder/
 
 通过Claude Code的Skill机制安装后即可直接调用。
 
-![alt text](asserts/nbl-ppt-builder使用指南_1776159294964.png)
+![alt text](assets/nbl-ppt-builder使用指南_1776159294964.png)
 
 如图所示，可以通过插件市场添加到本地目录。
 
@@ -310,25 +310,25 @@ AI：已完成！生成了12页PPT，使用了7种模板
 
 ### 封面页
 
-![封面页](asserts/nbl-ppt-builder使用指南_1776159543662.png)
+![封面页](assets/nbl-ppt-builder使用指南_1776159543662.png)
 
 展示PPT标题、汇报人信息和日期，采用企业标准配色和背景图。
 
 ### 目录页
 
-![目录页](asserts/nbl-ppt-builder使用指南_1776159567329.png)
+![目录页](assets/nbl-ppt-builder使用指南_1776159567329.png)
 
 清晰展示文档的主要章节结构，帮助观众快速了解内容框架。
 
 ### 内容页
 
-![内容页](asserts/nbl-ppt-builder使用指南_1776159586702.png)
+![内容页](assets/nbl-ppt-builder使用指南_1776159586702.png)
 
 内容页面自动选择合适的模板，展示具体配置步骤和说明文字。
 
 ### 结束页
 
-![结束页](asserts/nbl-ppt-builder使用指南_1776159605083.png)
+![结束页](assets/nbl-ppt-builder使用指南_1776159605083.png)
 
 统一的结束页面，感谢观看，保持专业形象。
 

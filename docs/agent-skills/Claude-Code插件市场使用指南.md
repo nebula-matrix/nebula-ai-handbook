@@ -54,7 +54,7 @@ Marketplace（市场）
 
 在打开的界面中，找到 `Marketplaces` 部分，可以在此进行插件的安装和管理：
 
-<!-- 图片占位：后续插入插件管理界面截图 -->
+![alt text](assets/Claude-Code插件市场使用指南_1776413699674.png)
 
 ---
 
