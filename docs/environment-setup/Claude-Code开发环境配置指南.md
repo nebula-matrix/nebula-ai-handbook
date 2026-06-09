@@ -604,9 +604,17 @@ nano ~/.claude/settings.json
     "ANTHROPIC_BASE_URL": "https://gateway.ai.dpu.tech",
     "API_TIMEOUT_MS": "3000000",
     "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
-    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "llm-large-claude",
-    "ANTHROPIC_DEFAULT_SONNET_MODEL": "llm-large-claude",
-    "ANTHROPIC_DEFAULT_OPUS_MODEL": "llm-large-claude"
+    "CLAUDE_CODE_ATTRIBUTION_HEADER": "0",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "llm-ultra-claude",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "llm-ultra-claude",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "llm-ultra-claude",
+    "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "200000",
+    "CLAUDE_CODE_DISABLE_1M_CONTEXT": "1",
+    "CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING": "1",
+    "DISABLE_BUG_COMMAND": "1",
+    "DISABLE_ERROR_REPORTING": "1",
+    "DISABLE_LOGIN_COMMAND": "1",
+    "DISABLE_LOGOUT_COMMAND": "1"
   }
 }
 ```
@@ -653,9 +661,17 @@ cat ~/.claude.json
     "ANTHROPIC_BASE_URL": "https://gateway.ai.dpu.tech",
     "API_TIMEOUT_MS": "3000000",
     "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
-    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "llm-large-claude",
-    "ANTHROPIC_DEFAULT_SONNET_MODEL": "llm-large-claude",
-    "ANTHROPIC_DEFAULT_OPUS_MODEL": "llm-large-claude"
+    "CLAUDE_CODE_ATTRIBUTION_HEADER": "0",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "llm-ultra-claude",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "llm-ultra-claude",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "llm-ultra-claude",
+    "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "200000",
+    "CLAUDE_CODE_DISABLE_1M_CONTEXT": "1",
+    "CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING": "1",
+    "DISABLE_BUG_COMMAND": "1",
+    "DISABLE_ERROR_REPORTING": "1",
+    "DISABLE_LOGIN_COMMAND": "1",
+    "DISABLE_LOGOUT_COMMAND": "1"
   }
 }
 ```
@@ -673,9 +689,17 @@ cat ~/.claude.json
 | `ANTHROPIC_BASE_URL` | `https://gateway.ai.dpu.tech` | API网关端点，必填 |
 | `API_TIMEOUT_MS` | `3000000` | API请求超时时间（毫秒），推荐值 |
 | `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` | `"1"` | 禁用非必要流量，提升性能 |
-| `ANTHROPIC_DEFAULT_HAIKU_MODEL` | `llm-large-claude` | 快速任务模型 |
-| `ANTHROPIC_DEFAULT_SONNET_MODEL` | `llm-large-claude` | 日常开发模型（默认） |
-| `ANTHROPIC_DEFAULT_OPUS_MODEL` | `llm-large-claude` | 复杂任务模型 |
+| `CLAUDE_CODE_ATTRIBUTION_HEADER` | `"0"` | 关闭输出中的模型归属头部信息，减少干扰 |
+| `ANTHROPIC_DEFAULT_HAIKU_MODEL` | `llm-ultra-claude` | 快速任务模型（统一使用 `llm-ultra-claude`，即 Kimi-2.5） |
+| `ANTHROPIC_DEFAULT_SONNET_MODEL` | `llm-ultra-claude` | 日常开发模型（统一使用 `llm-ultra-claude`，即 Kimi-2.5） |
+| `ANTHROPIC_DEFAULT_OPUS_MODEL` | `llm-ultra-claude` | 复杂任务模型（统一使用 `llm-ultra-claude`，即 Kimi-2.5） |
+| `CLAUDE_CODE_AUTO_COMPACT_WINDOW` | `"200000"` | 自动压缩上下文窗口的 token 阈值，当上下文超过 200000 token 时自动压缩 |
+| `CLAUDE_CODE_DISABLE_1M_CONTEXT` | `"1"` | 禁用 1M 长上下文功能，避免触发不稳定的长上下文模式 |
+| `CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING` | `"1"` | 禁用自适应思考模式，减少不必要的推理开销和响应延迟 |
+| `DISABLE_BUG_COMMAND` | `"1"` | 禁用 `/bug` 命令，防止误提交问题报告到外部服务 |
+| `DISABLE_ERROR_REPORTING` | `"1"` | 禁用错误上报功能，避免将内部环境错误信息发送到外部 |
+| `DISABLE_LOGIN_COMMAND` | `"1"` | 禁用 `/login` 命令，防止在已配置统一凭证的环境中误操作 |
+| `DISABLE_LOGOUT_COMMAND` | `"1"` | 禁用 `/logout` 命令，防止误登出导致API连接中断 |
 
 ---
 
