@@ -1,6 +1,6 @@
 # svn:externals 创建icv-skills使用说明 —— 引入 icv-sim 系列 skill
 
-## 省流版本(TL;DR)
+## 省流版本
 
 在 `<你的模块>` 验证环境根目录(如 `verification/bt/pa`)下两步完成部署:
 
