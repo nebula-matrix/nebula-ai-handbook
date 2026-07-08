@@ -132,20 +132,20 @@ bash setup_icv_externals.sh
 verification/bt/pa/setup_icv_externals.sh
 ```
 
-### 3.2 目录层级预检查
+### 3.2 运行环境预检查(sim 目录 + Makefile)
 
-脚本启动时会校验目录层级,必须满足:
+脚本启动时会校验当前目录(脚本所在目录)是否为一个有效的仿真模型根目录,必须满足:
 
-```
-<verification>/<bt|it|st>/<model>/setup_icv_externals.sh
-    再上一级      上一级     脚本所在目录
-```
+1. 当前目录下存在 `sim` 子目录;
+2. `sim` 目录下存在 `Makefile`(**不区分大小写**,`Makefile` / `makefile` / `MAKEFILE` 等均可)。
 
-即:脚本所在目录的**上一级**应为 `bt` / `it` / `st` 之一,**再上一级**应为 `verification`。以 pa 模型为例(`verification/bt/pa`):
-- 上一级 = `bt` ✓
-- 再上一级 = `verification` ✓
+以 pa 模型为例(`verification/bt/pa`):
+- `verification/bt/pa/sim/` 存在 ✓
+- `verification/bt/pa/sim/Makefile` 存在 ✓
 
-> 注:脚本按实际仓库结构 `verification/<bt|it|st>/<model>` 校验。若你的目录层级不同,请对应调整。
+校验由 `find sim -maxdepth 1 -iname makefile` 完成。任一条件不满足,脚本会报 `预检查失败: ...` 并退出,提示请确认脚本放在仿真模型根目录。
+
+> 注:早期版本曾校验"上一级为 bt/it/st、再上一级为 verification"的目录层级,现改为基于 `sim/Makefile` 的内容检查,更通用,不再依赖固定的目录命名层级。
 
 ### 3.3 执行环境:本地自提交 + 集群节点执行
 
@@ -187,7 +187,7 @@ bash setup_icv_externals.sh [install|uninstall]
 
 ### 3.5 install 执行步骤(集群节点上按顺序完成)
 
-1. **预检查与目录准备**:目录层级、`svn` 命令可用、模型目录是 svn 工作副本。若 `.claude/skills` 不存在,脚本会逐级创建(`mkdir -p .claude/skills`)并通过 `svn add` 纳入版本控制;若已存在,则校验其已被 svn 跟踪。
+1. **预检查与目录准备**:运行环境预检查(当前目录有 `sim` 子目录且 `sim` 下有 `Makefile`,不区分大小写)、`svn` 命令可用、模型目录是 svn 工作副本。若 `.claude/skills` 不存在,脚本会逐级创建(`mkdir -p .claude/skills`)并通过 `svn add` 纳入版本控制;若已存在,则校验其已被 svn 跟踪。
 2. **生成 externals 列表文件**:在 `.claude/skills/` 下生成 `icv-externals-list.txt`,内容优先取自脚本同目录的 `icv验证调试导入说明.md`(已写好 4 行 externals 条目);该文件缺失时回退到脚本内嵌默认值。
 3. **设置属性 + 检出**:在 `.claude/skills` 下执行 `svn propset svn:externals -F icv-externals-list.txt .` 与 `svn up .`,检出 4 个 skill 子目录。
 4. **范围检查(安全网)**:`svn status .claude/skills` 只允许 icv-sim-* 相关变更(属性变更、externals 标志、中间文件);若存在**与 icv-sim-* 无关的未提交改动**,脚本**中止 commit** 并报错,避免误提交他人改动。
@@ -196,7 +196,7 @@ bash setup_icv_externals.sh [install|uninstall]
 
 ### 3.6 uninstall 执行步骤(集群节点上按顺序完成)
 
-1. **预检查**:目录层级、svn 工作副本、`.claude/skills` 已纳入 svn 跟踪。
+1. **预检查**:运行环境预检查(`sim` 目录 + `sim/Makefile`)、svn 工作副本、`.claude/skills` 已纳入 svn 跟踪。
 2. **前置状态检查**:读取现有 `svn:externals` 属性。若不含任何 icv-sim-* 条目(未安装或已卸载),输出"无需卸载, 视为成功",exit 0(幂等);若只含部分 icv-sim-*(异常中间态),报错退出避免误删其他 externals。
 3. **删除属性 + 移除外部目录**:`svn propdel svn:externals .claude/skills` + `svn up .`,svn 会移除 4 个 external 目录的版本控制部分;脚本再主动清理目录内可能的未版本控制残留(如 `__pycache__`)。
 4. **删除中间文件**:删除 `.claude/skills/icv-externals-list.txt`(已版本控制则 `svn delete --keep-local` 纳入删除调度)。
@@ -268,6 +268,6 @@ less /mnt/public_share/setup/setup_icv_externals.sh    # 翻页查看
 
 脚本逻辑概要(详见 §3.5/§3.6 执行步骤):
 - **本地侧**:参数解析(install/uninstall/-h)→ 生成临时 worker 脚本 → `qsub` 投递到集群(all.q)→ 轮询 `qstat` 阻塞等待 → 读结果标记判定成败 → 成功清理临时文件/失败保留并提示日志。
-- **集群节点侧(worker)**:目录层级预检查 → svn 工作副本校验 → install(propset + svn up + 范围检查 + commit)/ uninstall(前置检查 + propdel + svn up + 清理残留 + 删中间文件 + 范围检查 + commit)→ 写结果标记 + `sync` + 打印降级标记。
+- **集群节点侧(worker)**:运行环境预检查(`sim` 目录 + `sim/Makefile` 不区分大小写) → svn 工作副本校验 → install(propset + svn up + 范围检查 + commit)/ uninstall(前置检查 + propdel + svn up + 清理残留 + 删中间文件 + 范围检查 + commit)→ 写结果标记 + `sync` + 打印降级标记。
 - **安全机制**:commit 前范围检查(只允许 icv-sim-* 相关变更)、EXIT trap 兜底写失败标记、result 文件名带 jobid 避免 NFS stale、outlog 降级判定。
 
