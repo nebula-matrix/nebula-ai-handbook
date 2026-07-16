@@ -2,25 +2,14 @@
 
 ## 省流版本
 
-在 `<你的模块>` 验证环境根目录(如 `verification/bt/pa`)下两步完成部署:
+在 `<你的模块>` 验证环境根目录(如 `verification/bt/pa`)下直接执行脚本即可:
 
 ```bash
-# 1) 从共享目录复制部署脚本并加可执行权限
-cp /mnt/public_share/setup/setup_icv_externals.sh <你的验证环境根目录>/
-chmod +x <你的验证环境根目录>/setup_icv_externals.sh
-
-# 2) 进入模块目录执行脚本(默认 install: 自动 qsub 到集群节点完成 externals 属性设置 + svn up + commit,检出 4 个 icv-sim-* skill)
 cd <你的验证环境根目录>          # 例如 verification/bt/pa
-bash setup_icv_externals.sh              # 等价于 bash setup_icv_externals.sh install
+bash setup_icv_externals.sh
 ```
 
-**卸载**(移除 4 个 icv-sim-* externals 并 commit):
-
-```bash
-bash setup_icv_externals.sh uninstall
-```
-
-**成功标志**:脚本末尾输出 `===== 集群执行成功 =====`,`.claude/skills/` 下出现(或卸载后消失)`icv-sim-analyze`、`icv-sim-cli`、`icv-sim-cov`、`icv-sim-run` 四个子目录,且本次产生的临时文件已自动清理。
+**成功标志**:脚本末尾输出 `install 成功。/.../.claude/skills 已包含 4 个 icv-sim-* skill:`,`.claude/skills/` 下出现 `icv-sim-analyze`、`icv-sim-cli`、`icv-sim-cov`、`icv-sim-run` 四个子目录。
 
 **后续 skill 更新**(`bt/uvn` 那边的 skill 内容更新提交后,无需重新部署):
 
@@ -30,8 +19,6 @@ svn up .                          # 自动同步 externals 指向的最新 skill
 ```
 
 > ⚠️ **关键约束**:externals 挂接的 4 个目录是 `bt/uvn` 的「软链接」,**禁止在当前模块内修改并提交**(会回传影响所有模块)。需通用改动请去 `bt/uvn` 改;需自行迭代请复制副本到非 externals 路径(如 `.claude/skills_local/`)另行维护。
-
-> 📌 **执行环境**:脚本**在 SGE 集群节点上实际执行 svn 操作**(本地 svn 1.14 工作副本格式过旧,集群 svn 1.7 才兼容)。本地运行脚本时,它会自动 `qsub` 把任务投递到集群节点,本地阻塞等待结果——对使用者而言仍是"本地一条命令搞定"。详见 §3。
 
 > 详细原理、四个 skill 的作用、部署细节与故障排查见下文。
 
@@ -43,34 +30,54 @@ svn up .                          # 自动同步 externals 指向的最新 skill
 
 > 说明:`svn:externals` 是 svn 的目录属性,值是一份「外部目录映射列表」,格式为 `<本地子目录名> <远端URL>`,`svn up` 时会自动把远端 URL 检出到对应子目录。
 
-### 脚本获取方式
+### 脚本位置
 
-部署脚本 `setup_icv_externals.sh` 统一存放在共享目录,需要时复制到自己的工作目录(验证环境根目录)即可,不涉及仓库内分发:
+部署脚本 `setup_icv_externals.sh` 已纳入模型仓库,位于验证环境根目录(模型目录):
 
-| 位置 | 用途 |
-|------|------|
-| `/mnt/public_share/setup/setup_icv_externals.sh` | 统一取用入口,复制到各模型工作目录后执行 |
+```
+verification/<bt|it|st>/<你的模块>/setup_icv_externals.sh
+```
 
-> 该共享目录由管理员维护,所有用户可读取/复制。如需旧版回退,备份为同目录下 `bak-setup_icv_externals.sh`(由管理员存放)。
+以 pa 模型为例,即 `verification/bt/pa/setup_icv_externals.sh`。
 
-获取与执行:
+## 2. 执行环境与回退机制
+
+脚本**默认在本地直接执行 svn 操作**。本地 svn 不可用时,自动回退为 qsub 提交到 SGE 集群节点执行。
+
+### 本地优先
+
+进入模型目录直接执行即可:
 
 ```bash
-# 1) 从共享目录复制脚本到你的工作目录(验证环境根目录,即 <你的模块> 目录)
-cp /mnt/public_share/setup/setup_icv_externals.sh <你的验证环境根目录>/
-# 2) 复制后建议补一次 +x,cp 不带 -p 时副本权限受 umask 影响可能丢可执行位
-chmod +x <你的验证环境根目录>/setup_icv_externals.sh
-# 3) 在工作目录下执行
-cd <你的验证环境根目录>
+cd verification/<bt|it|st>/<你的模块>
 bash setup_icv_externals.sh
 ```
 
+脚本会检查本地 `svn` 是否可用、模型目录是否为有效 svn 工作副本,然后直接在本地完成 `svn:externals` 设置 / 删除 + `svn up` + 自动 `svn commit`。
 
-## 2. 四个 icv 开头 skill 的作用与应用场景
+### 回退到集群 qsub 的触发条件
+
+只有在以下两类环境性问题时才会回退:
+
+1. **本地未找到 `svn` 命令**;
+2. **本地 `svn info` 报 `E155036`(工作副本格式过旧)**。
+
+上述两种情况会生成 worker 脚本 `qsub` 到 SGE 集群(默认队列 `all.q`),由集群节点上的 svn 环境完成操作。本地阻塞等待 `qstat` 结束,并自动判定结果。
+
+### 不会回退、会直接报错的情况
+
+以下 svn 业务错误即使回退到集群也大概率同样失败,脚本会直接报错退出,避免掩盖真因:
+
+- 模型目录根本不是 svn 工作副本(`E155007` 等);
+- 网络超时、认证失败(`E170013`/`E170001`);
+- 工作副本存在冲突(`C`);
+- externals URL 错误、服务器无响应等。
+
+## 3. 四个 icv 开头 skill 的作用与应用场景
 
 四个 skill 均来自 `bt/uvn/.claude/skills/`,按「工具层 + 业务层」分工:`icv-sim-cli` 是工具底座(安装/总览),另三个是业务层,业务层均以前置「tw 已装」为条件。
 
-### 2.1 icv-sim-cli —— tw CLI 工具层(安装/环境/总览)
+### 3.1 icv-sim-cli —— tw CLI 工具层(安装/环境/总览)
 
 - **作用**:`tw` CLI 的安装、环境检查与功能总览。
 - **应用场景**:
@@ -81,7 +88,7 @@ bash setup_icv_externals.sh
 - **定位**:工具层,**不负责**编译/仿真/调试/覆盖率等业务执行。业务请求直接进对应业务 skill,不要把本 skill 当成业务 skill 的前置入口。
 - **前置**:无(它本身就是安装入口)。
 
-### 2.2 icv-sim-run —— 编译 / 仿真 / 作业管理
+### 3.2 icv-sim-run —— 编译 / 仿真 / 作业管理
 
 - **作用**:封装项目 Makefile 的 `cmp`/`run`/`batch`/`urg`/`merge`/`plan`,提交 SGE 集群并跟踪作业。
 - **应用场景**(任何「把设计 build 出来、跑起来」的执行诉求):
@@ -92,7 +99,7 @@ bash setup_icv_externals.sh
   - 典型话术:「simv/KDB 没生成要先编」「代码改完重编再跑」「帮我编译一下项目」「跑带覆盖率的仿真」。
 - **前置**:tw 已装(见 icv-sim-cli)。
 
-### 2.3 icv-sim-analyze —— 仿真分析(日志/波形/连通性/层次)
+### 3.3 icv-sim-analyze —— 仿真分析(日志/波形/连通性/层次)
 
 - **作用**:分析仿真到底怎么跑的——从日志、波形、连通性、层次结构入手,既包括失败定位,也包括事后量化。
 - **应用场景**:
@@ -103,7 +110,7 @@ bash setup_icv_externals.sh
   - TB 层次结构查找。
 - **前置**:tw 已装;KDB(`tw make cmp` 产生);FSDB 波形(`tw make run/batch --wave fsdb` 产生,非默认)。
 
-### 2.4 icv-sim-cov —— 覆盖率查询
+### 3.4 icv-sim-cov —— 覆盖率查询
 
 - **作用**:查询 VCS 覆盖率数据库(VDB)。
 - **应用场景**:
@@ -113,7 +120,7 @@ bash setup_icv_externals.sh
   - 与 urgReport 口径对齐(`tw cov report`,整体 SCORE + assert)。
 - **前置**:tw 已装;VDB 数据(`tw make run --ccov` 产生,`tw cov` 只查询不生成)。
 
-### 2.5 四者关系速记
+### 3.5 四者关系速记
 
 | skill | 层次 | 一句话 | 前置 |
 |-------|------|--------|------|
@@ -122,112 +129,73 @@ bash setup_icv_externals.sh
 | icv-sim-analyze | 业务层 | 看日志/波形/trace 调试 | tw 已装 + KDB/FSDB |
 | icv-sim-cov | 业务层 | 查覆盖率 VDB | tw 已装 + VDB |
 
-## 3. 部署方式(bash 一键部署,集群执行)
+## 4. 部署方式(bash 一键部署)
 
-### 3.1 脚本放置位置
+### 4.1 脚本放置位置
 
-从共享目录复制来的 `setup_icv_externals.sh` 放在**验证环境根目录**(模型目录),即 `<你的模块>` 目录下。以 pa 模型为例,复制后位于:
+脚本应放在验证环境根目录(模型目录),即 `<你的模块>` 目录下。以 pa 模型为例:
 
 ```
 verification/bt/pa/setup_icv_externals.sh
 ```
 
-### 3.2 运行环境预检查(sim 目录 + Makefile)
+### 4.2 运行环境预检查
 
-脚本启动时会校验当前目录(脚本所在目录)是否为一个有效的仿真模型根目录,必须满足:
+脚本启动时会校验:
 
-1. 当前目录下存在 `sim` 子目录;
-2. `sim` 目录下存在 `Makefile`(**不区分大小写**,`Makefile` / `makefile` / `MAKEFILE` 等均可)。
+- 脚本所在目录下存在 `sim/` 目录;
+- `sim/` 下存在 `Makefile`(不区分大小写);
+- `svn` 命令可用、模型目录是 svn 工作副本。
 
-以 pa 模型为例(`verification/bt/pa`):
-- `verification/bt/pa/sim/` 存在 ✓
-- `verification/bt/pa/sim/Makefile` 存在 ✓
+若 `.claude` 或 `.claude/skills` 尚未被 svn 跟踪,脚本会自动处理:
 
-校验由 `find sim -maxdepth 1 -iname makefile` 完成。任一条件不满足,脚本会报 `预检查失败: ...` 并退出,提示请确认脚本放在仿真模型根目录。
+- 目录不存在时逐级 `mkdir -p` 创建;
+- 使用 `svn add --depth empty` 只把 `.claude` 和 `.claude/skills` 这两个**空目录节点**纳入版本控制,
+  **不会递归添加其内部已有的其它文件或目录**(如 `settings.json`、`.claude/tmp/`、`.claude/skills/xxx_demo_skills` 等)。
 
-> 注:早期版本曾校验"上一级为 bt/it/st、再上一级为 verification"的目录层级,现改为基于 `sim/Makefile` 的内容检查,更通用,不再依赖固定的目录命名层级。
+前提是:
 
-### 3.3 执行环境:本地自提交 + 集群节点执行
+- 脚本所在模型目录本身必须是 svn 工作副本;
+- `.claude` 没有被父目录的 `svn:ignore` 排除(若被 ignore,`svn add` 会失败,脚本会提示先解除 ignore)。
 
-脚本涉及 svn 操作必须在 **SGE 集群节点**上执行(本地 svn 1.14 工作副本格式过旧,集群 svn 1.7 才兼容)。脚本采用**本地自提交**模式,对使用者完全透明:
+### 4.3 执行步骤(脚本内部按顺序完成)
 
-```
-本地 shell 执行 bash setup_icv_externals.sh install
-        │
-        ▼
-本地侧: 解析参数 → 生成临时 worker 脚本 → qsub 投递到集群(队列 all.q)
-        │
-        ▼
-集群节点: 执行 install/uninstall 主逻辑(svn propset/propdel + svn up + commit)
-        │  写结果标记文件 + sync 到 NFS
-        ▼
-本地侧: 轮询 qstat 等作业结束 → 读结果标记 → 打印成功/失败 → 清理临时文件
-```
+1. **运行环境预检查**:校验 `sim/Makefile`、`svn` 可用、模型目录是 svn 工作副本。若本地 svn 环境不可用(见 §2 回退条件),自动回退到集群 qsub。
+2. **确保 `.claude` 与 `.claude/skills` 被 svn 跟踪**:目录不存在则创建;未跟踪则 `svn add --depth empty` 只添加空目录节点,**不递归**添加内部已有文件/目录。
+3. **生成 externals 列表文件**:在 `.claude/skills/` 下生成 `icv-externals-list.txt`,内容优先取自脚本同目录的 `icv验证调试导入说明.md`(已写好 4 行 externals 条目);该文件缺失时回退到脚本内嵌默认值。
+4. **设置属性**:在 `.claude/skills` 下执行
+   ```bash
+   svn propset svn:externals -F icv-externals-list.txt .
+   ```
+5. **范围检查与自动 commit**:脚本只提交 icv-sim-* 相关变更:
+   - `.claude` 目录本身(首次为空目录节点);
+   - `.claude/skills` 目录本身(携带 `svn:externals` 属性);
+   - `.claude/skills/icv-externals-list.txt`。
 
-- 本地侧只负责 qsub 投递 + 阻塞等待 + 结果判定,**不直接操作 svn 工作副本**。
-- 集群节点执行实际的 svn 命令,commit message 固定为 `set svn:externals for icv-sim skills`(install)/ `remove svn:externals for icv-sim skills`(uninstall)。
-- 成功后自动清理本次产生的临时文件(worker 脚本/日志/结果标记);**失败时保留**临时文件以便排查(脚本会打印日志路径)。
+   `.claude` 及 `.claude/skills` 下其它任意名称的未提交/无关项一律忽略,不报错也不提交。
+6. **拉取外部目录**:在 `.claude/skills` 下执行 `svn up .`,检出 4 个 skill 子目录。注意:必须先 commit 父目录(步骤 5),否则 `.claude/skills` 尚无版本化父目录,`svn up` 会跳过 external。
+7. **成功校验**:检查 `.claude/skills` 下是否包含 `icv-sim-analyze`、`icv-sim-cli`、`icv-sim-cov`、`icv-sim-run`,齐了即成功。
 
-### 3.4 双模式参数
-
-```bash
-bash setup_icv_externals.sh [install|uninstall]
-```
-
-| 参数 | 作用 | commit message |
-|------|------|----------------|
-| `install`(默认,可省略) | 设置 `svn:externals` + `svn up` + 自动 commit | `set svn:externals for icv-sim skills` |
-| `uninstall` | `propdel svn:externals` + `svn up` 移除 4 目录 + 删除中间文件 + 自动 commit | `remove svn:externals for icv-sim skills` |
-| `-h` / `--help` | 显示用法 | — |
-
-- **无参数**等价于 `install`。
-- **多余参数**会报错退出(commit message 固定,不接受额外参数)。
-- **install 幂等**:已部署状态下重跑 install,重新 propset 相同内容 + commit,安全。
-- **uninstall 幂等**:已卸载状态下再跑 uninstall,脚本检测到无 icv-sim-* externals 会优雅地输出"无需卸载, 视为成功"并以 exit 0 结束(不会报错)。
-
-### 3.5 install 执行步骤(集群节点上按顺序完成)
-
-1. **预检查与目录准备**:运行环境预检查(当前目录有 `sim` 子目录且 `sim` 下有 `Makefile`,不区分大小写)、`svn` 命令可用、模型目录是 svn 工作副本。若 `.claude/skills` 不存在,脚本会逐级创建(`mkdir -p .claude/skills`)并通过 `svn add` 纳入版本控制;若已存在,则校验其已被 svn 跟踪。
-2. **生成 externals 列表文件**:在 `.claude/skills/` 下生成 `icv-externals-list.txt`,内容优先取自脚本同目录的 `icv验证调试导入说明.md`(已写好 4 行 externals 条目);该文件缺失时回退到脚本内嵌默认值。
-3. **设置属性 + 检出**:在 `.claude/skills` 下执行 `svn propset svn:externals -F icv-externals-list.txt .` 与 `svn up .`,检出 4 个 skill 子目录。
-4. **范围检查(安全网)**:`svn status .claude/skills` 只允许 icv-sim-* 相关变更(属性变更、externals 标志、中间文件);若存在**与 icv-sim-* 无关的未提交改动**,脚本**中止 commit** 并报错,避免误提交他人改动。
-5. **自动 commit**:`svn commit .claude/skills -m "set svn:externals for icv-sim skills"`。
-6. **成功校验**:检查 4 个 `icv-sim-*` 目录到位。
-
-### 3.6 uninstall 执行步骤(集群节点上按顺序完成)
-
-1. **预检查**:运行环境预检查(`sim` 目录 + `sim/Makefile`)、svn 工作副本、`.claude/skills` 已纳入 svn 跟踪。
-2. **前置状态检查**:读取现有 `svn:externals` 属性。若不含任何 icv-sim-* 条目(未安装或已卸载),输出"无需卸载, 视为成功",exit 0(幂等);若只含部分 icv-sim-*(异常中间态),报错退出避免误删其他 externals。
-3. **删除属性 + 移除外部目录**:`svn propdel svn:externals .claude/skills` + `svn up .`,svn 会移除 4 个 external 目录的版本控制部分;脚本再主动清理目录内可能的未版本控制残留(如 `__pycache__`)。
-4. **删除中间文件**:删除 `.claude/skills/icv-externals-list.txt`(已版本控制则 `svn delete --keep-local` 纳入删除调度)。
-5. **范围检查 + 自动 commit**:同 install 的安全网,commit message 为 `remove svn:externals for icv-sim skills`。
-6. **成功校验**:确认 4 个目录已消失、属性已清空。
-
-### 3.7 一键执行
+### 4.4 一键执行
 
 ```bash
 cd verification/<bt|it|st>/<你的模块>     # 例如 cd verification/bt/pa
-bash setup_icv_externals.sh               # install(默认)
-bash setup_icv_externals.sh uninstall     # 卸载
+bash setup_icv_externals.sh
 ```
 
-### 3.8 成功标志
+### 4.5 成功标志
 
-脚本末尾输出 `===== 集群执行成功 =====` 并 `exit 0`。
+脚本末尾输出 `install 成功。/path/to/.claude/skills 已包含 4 个 icv-sim-* skill:`,且 `.claude/skills` 目录下出现 4 个子目录:
 
-- **install 后**:`.claude/skills` 目录下出现 4 个子目录:
-  ```
-  .claude/skills/
-  ├── icv-sim-analyze/
-  ├── icv-sim-cli/
-  ├── icv-sim-cov/
-  └── icv-sim-run/
-  ```
-- **uninstall 后**:上述 4 个子目录与 `icv-externals-list.txt` 均移除,`svn:externals` 属性清空。
+```
+.claude/skills/
+├── icv-sim-analyze/
+├── icv-sim-cli/
+├── icv-sim-cov/
+└── icv-sim-run/
+```
 
-> 临时文件(`.setup_icv_worker_*` / `.setup_icv_result_*`)在成功后自动清理;失败时保留,脚本会打印其路径供排查。
-
-### 3.9 后续步骤
+### 4.6 后续步骤
 
 **后续 skills 更新同步(类似软链接):** `svn:externals` 的 4 个 skill 目录始终指向 `bt/uvn` 仓库版本,相当于对远端的「软链接」。`bt/uvn` 那边的 skill 内容更新并提交后,**你无需重新部署、也无需手动拷贝**——只需在自己的验证环境执行一次 `svn up`, externals 挂接的 4 个目录就会自动同步到最新版本:
 
@@ -238,36 +206,26 @@ svn up .                                  # 拉取 externals 指向的最新 ski
 
 > 同理,团队其他成员首次 `svn up` 该目录时会自动挂接 4 个 skill;之后每次 `svn up` 即同步更新,无需各自跑部署脚本。
 
-## 4. 注意事项与故障排查
+## 5. 注意事项与故障排查
 
-- **externals 是只读引用,禁止在当前模块内修改提交**:4 个 `icv-sim-*` 目录由 `bt/uvn` 统一维护,通过 `svn:externals` 挂接进来后相当于远端的「软链接」(详见 §3.9)。**不要在当前模块内对这些目录做修改并提交**——externals 目录的修改会回传到 `bt/uvn` 源仓库,影响所有挂接该 skill 的模块,易造成他人环境异常。
+- **externals 是只读引用,禁止在当前模块内修改提交**:4 个 `icv-sim-*` 目录由 `bt/uvn` 统一维护,通过 `svn:externals` 挂接进来后相当于远端的「软链接」(详见 §4.6)。**不要在当前模块内对这些目录做修改并提交**——externals 目录的修改会回传到 `bt/uvn` 源仓库,影响所有挂接该 skill 的模块,易造成他人环境异常。
   - **需要通用改动时**:请到 `bt/uvn/.claude/skills/` 修改并提交,各模块 `svn up` 即可同步。
   - **有自行迭代需求时(不想影响他人、也不想被远端更新覆盖)**:不要动 externals 挂接的目录,而是**复制一份源文件到自己的工作目录另行维护,做好版本隔离**。例如复制到 `.claude/skills_local/`(或其它非 externals 路径)并重命名,改用本地副本;同时从 `icv-externals-list.txt` 中移除对应条目,避免本地副本与 externals 引用并存冲突。这样你的定制版本独立演进,既不会回传影响 `bt/uvn`,也不会在 `svn up` 时被远端更新覆盖。
-- **`.claude/skills` 的创建与 svn 跟踪**:脚本会自动处理——目录不存在时逐级 `mkdir -p` 创建并 `svn add` 纳入版本控制;目录已存在时校验其已被 svn 跟踪。前提是**脚本所在模型目录本身必须是 svn 工作副本**(脚本启动时会 `svn info` 校验)。若模型目录不是 svn 工作副本,脚本会直接退出并提示;若该目录已被 `svn:ignore` 排除,需先解除忽略或换到未被忽略的位置。
-- **范围检查 abort(commit 前安全网)**:install/uninstall 在 commit 前会检查 `.claude/skills` 下的 svn 变更,**只允许 icv-sim-* 相关改动**。若该目录存在其他未提交改动(例如你自己加的文件、其他 skill 的修改),脚本会报 `范围检查失败: ...存在与 icv-sim-* 无关的未提交变更` 并**中止 commit**(不自动提交,避免误伤)。处理:先手动 commit/revert 那些无关改动,再重跑脚本。
-- **uninstall 报"无需卸载, 视为成功"**:这是**正常行为**——说明当前 `.claude/skills` 已无 icv-sim-* externals(尚未安装或已卸载过),脚本幂等退出,exit 0。若你期望的是真正卸载,说明此前已卸载完成,无需再操作。
-- **集群作业失败**:脚本报 `===== 集群执行失败 =====` 并显示 `FAIL: 退出 code=...` 时,按提示查看完整日志 `.setup_icv_worker_<mode>.out`(失败时临时文件保留)。常见原因:svn 凭证未缓存(节点上 `svn list` 测试)、SVN 服务器不可达、工作副本有冲突等。
-- **作业异常终止(结果标记文件缺失)**:极少见,通常是作业被 `qdel` 或节点异常崩溃。查看 `.setup_icv_worker_<mode>.out` 末尾排查。
-- **本地侧提示"NFS 缓存"相关 warn**:集群端写结果文件后,本地经 NFS 读取偶有缓存延迟。脚本已内置 sync + 重试 + outlog 降级判定,通常无需关注;若仍偶发,重跑一次即可。
+- **`.claude` 与 `.claude/skills` 的创建与 svn 跟踪**:脚本会自动处理——目录不存在时逐级 `mkdir -p` 创建,并只把 `.claude` 和 `.claude/skills` 这两个目录本身(`svn add --depth empty`)纳入版本控制,**不会递归添加目录内部的其它文件/目录**(如 `settings.json`、`.claude/worktrees/`、`.claude/tmp/`、`.claude/skills/xxx_demo_skills` 等)。目录已存在但未被跟踪时,同样只 add 空目录节点,内部已有内容保持未跟踪。前提是:
+  - **脚本所在模型目录本身必须是 svn 工作副本**(脚本启动时会 `svn info` 校验);
+  - `.claude` 没有被父目录的 `svn:ignore` 排除。若 `.claude` 被 ignore,`svn add` 会失败,脚本会提示先解除 ignore。
 
+  若模型目录不是 svn 工作副本,脚本会直接报错退出;若 `.claude` 被 `svn:ignore` 排除,需先在模型目录解除忽略(例如 `svn propdel svn:ignore .` 或从 ignore 列表中移除 `.claude`)后再运行本脚本。
+- **`.claude` 及 `.claude/skills` 下其它未提交项**:脚本只提交 icv-sim-* 相关的目录节点、属性与 `icv-externals-list.txt`,其它任意名称的未跟踪或改动项(如 `ptype-fanout`、`xxx_demo_skills`、`xxx_yyy`)会被忽略,不会报错也不会被提交。如果你希望它们不再出现在 `svn status` 里,可手动加入 `svn:ignore`。
+- **首次安装的 commit 顺序**:首次安装时 `.claude` 与 `.claude/skills` 可能还是新增(`A`)状态,脚本会先 commit 这些空目录节点与 `svn:externals` 属性,然后再执行 `svn up` 拉取 4 个 `icv-sim-*` 外部目录。如果顺序颠倒,`svn up` 会因“无版本化父目录”而跳过 external。
+- **临时文件**:本地执行时脚本可能在模型根目录生成 `.setup_icv_*` 开头的临时文件(回退 qsub 时还会生成 worker 脚本和 out 日志)。成功执行后这些临时文件会被自动清理;失败时会保留以便排查,已被 `.gitignore` 忽略,不会误入 git 提交。
 
-## 5. 脚本内容
+## 6. 脚本内容
 
-脚本统一存放在共享目录,不随仓库分发,需要时直接查看或复制:
+脚本已纳入模型仓库,位于验证环境根目录,直接查看或执行即可:
 
 ```
-/mnt/public_share/setup/setup_icv_externals.sh
+verification/<bt|it|st>/<你的模块>/setup_icv_externals.sh
 ```
 
-查看脚本内容:
-
-```bash
-cat /mnt/public_share/setup/setup_icv_externals.sh
-less /mnt/public_share/setup/setup_icv_externals.sh    # 翻页查看
-```
-
-脚本逻辑概要(详见 §3.5/§3.6 执行步骤):
-- **本地侧**:参数解析(install/uninstall/-h)→ 生成临时 worker 脚本 → `qsub` 投递到集群(all.q)→ 轮询 `qstat` 阻塞等待 → 读结果标记判定成败 → 成功清理临时文件/失败保留并提示日志。
-- **集群节点侧(worker)**:运行环境预检查(`sim` 目录 + `sim/Makefile` 不区分大小写) → svn 工作副本校验 → install(propset + svn up + 范围检查 + commit)/ uninstall(前置检查 + propdel + svn up + 清理残留 + 删中间文件 + 范围检查 + commit)→ 写结果标记 + `sync` + 打印降级标记。
-- **安全机制**:commit 前范围检查(只允许 icv-sim-* 相关变更)、EXIT trap 兜底写失败标记、result 文件名带 jobid 避免 NFS stale、outlog 降级判定。
-
+脚本逻辑概要(详见 §4.3 执行步骤):预检查运行环境 → 确保 `.claude` 与 `.claude/skills` 被 svn 跟踪(必要时 `--depth empty` add 空目录节点)→ 在 `.claude/skills` 生成 `icv-externals-list.txt`(内嵌默认 4 行 externals)→ `svn propset svn:externals -F` → 范围检查并 commit(只提交 icv-sim 相关项:`.claude`、`.claude/skills`、`icv-externals-list.txt`)→ `svn up` 拉取 external → 校验 4 个 `icv-sim-*` 目录到位。
